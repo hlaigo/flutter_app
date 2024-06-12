@@ -1,0 +1,33 @@
+name: aigo
+description: "A new Flutter project."
+publish_to: 'none'
+version: 0.1.0
+
+environment:
+  sdk: '>=3.3.3 <4.0.0'
+
+dependencies:
+  firebase_auth: ^4.20.0
+  firebase_core: ^2.31.1
+  firebase_messaging: ^14.9.4
+  flutter:
+    sdk: flutter
+  flutter_local_notifications: ^17.1.2
+  flutter_naver_login: ^1.8.0
+  google_sign_in: ^6.2.1
+  googleapis_auth: ^1.6.0
+  http: ^1.2.1
+  kakao_flutter_sdk: ^1.9.2
+  logger: ^2.3.0
+  video_player: ^2.8.7
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+assets:
+  - assets/data
+
+flutter:
+  uses-material-design: true

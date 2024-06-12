@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "759460043840",
+    "project_id": "subtle-striker-424805-e3",
+    "storage_bucket": "subtle-striker-424805-e3.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:759460043840:android:296a326578879f2fe993a5",
+        "android_client_info": {
+          "package_name": "com.halflambda.aigo"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "759460043840-7tg1e347umq9erpc6cc33esjkag1fvee.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.halflambda.aigo",
+            "certificate_hash": "02673dce6841b7571f940cfa4ba1f9b3791d11df"
+          }
+        },
+        {
+          "client_id": "759460043840-pukinfep48rto5rs49amcna7amvarju9.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAFY9bZrVMiAkn1-y197PYvvM-_zUmomAY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "759460043840-akdkbd1fq2lj9tuh8j0qv4ai1veii1k3.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "759460043840-j7a9t2t54fft1km1a56sn5lg380l588h.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.halflambda.aigo"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
