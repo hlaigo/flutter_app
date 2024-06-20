@@ -7,6 +7,7 @@ environment:
   sdk: '>=3.3.3 <4.0.0'
 
 dependencies:
+  cupertino_icons: ^1.0.8
   firebase_auth: ^4.20.0
   firebase_core: ^2.31.1
   firebase_messaging: ^14.9.4
@@ -17,8 +18,11 @@ dependencies:
   google_sign_in: ^6.2.1
   googleapis_auth: ^1.6.0
   http: ^1.2.1
+  intl: ^0.19.0
   kakao_flutter_sdk: ^1.9.2
   logger: ^2.3.0
+  table_calendar: ^3.1.2
+  timer_builder: ^2.0.0
   video_player: ^2.8.7
 
 dev_dependencies:
@@ -26,8 +30,42 @@ dev_dependencies:
     sdk: flutter
   flutter_lints: ^3.0.0
 
-assets:
-  - assets/data
-
 flutter:
   uses-material-design: true
+  assets:
+   - assets/data/
+   - assets/images/
+
+  fonts:
+    - family: Pacifico
+      fonts:
+        - asset: assets/fonts/Pacifico/Pacifico-Regular.ttf
+          # weight: 400
+    - family: NotoSansKR
+      fonts:
+        - asset: assets/fonts/NotoSansKR/NotoSansKR-Thin.ttf
+          weight: 100
+        - asset: assets/fonts/NotoSansKR/NotoSansKR-ExtraLight.ttf
+          weight: 200
+        - asset: assets/fonts/NotoSansKR/NotoSansKR-Light.ttf
+          weight: 300
+        - asset: assets/fonts/NotoSansKR/NotoSansKR-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/NotoSansKR/NotoSansKR-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/NotoSansKR/NotoSansKR-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/NotoSansKR/NotoSansKR-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/NotoSansKR/NotoSansKR-ExtraBold.ttf
+          weight: 800
+        - asset: assets/fonts/NotoSansKR/NotoSansKR-Black.ttf
+          weight: 900
+    - family: NanumGothic
+      fonts:
+        - asset: assets/fonts/NanumGothic/NanumGothic-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/NanumGothic/NanumGothic-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/NanumGothic/NanumGothic-ExtraBold.ttf
+          weight: 800

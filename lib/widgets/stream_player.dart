@@ -1,123 +1,194 @@
-// import 'dart:ui';
+import 'dart:async';
+import 'dart:ui';
 
-// import 'package:flutter/material.dart';
-// import 'package:flutter_vlc_player/flutter_vlc_player.dart';
-// import 'package:video_player/video_player.dart';
+import 'package:aigo/main.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
+import 'package:video_player/video_player.dart';
 
-// class streamPlayer extends StatefulWidget {
-//   const streamPlayer({super.key});
+class streamPlayer extends StatefulWidget {
+  String videoResource;
+  streamPlayer({
+    super.key,
+    required this.videoResource,
+  });
 
-//   @override
-//   State<streamPlayer> createState() => _streamPlayerState();
-// }
+  @override
+  State<streamPlayer> createState() => _streamPlayerState();
+}
 
-// class _streamPlayerState extends State<streamPlayer> {
-//   late VideoPlayerController _controller;
+class _streamPlayerState extends State<streamPlayer> {
+  late VideoPlayerController _controller;
 
-//   Future<void> initializePlayer() async {}
-//   Size _playerSize = Size(0, 0);
-//   GlobalKey _videoPlayer = GlobalKey();
-//   late VlcPlayerController _videoPlayerController;
-//   double _IconSize = 60.0;
-//   bool _isPlaying = false;
+  Future<void> initializePlayer() async {}
+  bool _onTouch = false;
+  late Timer _timer;
+  ValueNotifier<Duration>? _timelineNotifier = ValueNotifier(Duration.zero);
 
-//   void _playAndPause() {
-//     setState(() {
-//       _isPlaying = !_isPlaying;
-//       if (_isPlaying) {
-//         _videoPlayerController.play();
-//       } else {
-//         _videoPlayerController.pause();
-//       }
-//     });
-//   }
+  void _listener() {
+    _timelineNotifier!.value = _controller.value.position;
+  }
 
-//   Size _getPlayerSize(GlobalKey key) {
-//     if (key.currentContext != null) {
-//       final RenderBox renderBox =
-//           key.currentContext!.findRenderObject() as RenderBox;
-//       Size size = renderBox.size;
-//       return size;
-//     } else {
-//       return Size(0, 0);
-//     }
-//   }
+  @override
+  void initState() {
+    // TODO: implement initState
+    _controller = VideoPlayerController.networkUrl(
+        Uri.parse(widget.videoResource),
+        videoPlayerOptions: VideoPlayerOptions())
+      ..initialize().then((_) {
+        // Ensure the first frame is shown after the video is initialized, even before the play button has been pressed.
+        setState(() {
+          _controller.play();
+          _controller.addListener(_listener);
+        });
+      });
+    super.initState();
+  }
 
-//   @override
-//   void initState() {
-//     // TODO: implement initState
-//     WidgetsBinding.instance.addPostFrameCallback((_) {
-//       _playerSize = _getPlayerSize(_videoPlayer);
-//       setState(() {});
-//     });
-//     _controller = VideoPlayerController.networkUrl(Uri.parse(
-//         'https://devstreaming-cdn.apple.com/videos/streaming/examples/bipbop_4x3/bipbop_4x3_variant.m3u8'))
-//       ..initialize().then((_) {
-//         // Ensure the first frame is shown after the video is initialized, even before the play button has been pressed.
-//         setState(() {});
-//       });
-//     super.initState();
-//   }
+  String _changeTimeLine(Duration duration) {
+    String twoDigits(int n) => n.toString().padLeft(2, "0");
 
-//   @override
-//   Future<void> dispose() async {
-//     // TODO: implement dispose
-//     super.dispose();
-//   }
+    String hours = twoDigits(duration.inHours);
+    String minutes = twoDigits(duration.inMinutes.remainder(60));
+    String seconds = twoDigits(duration.inSeconds.remainder(60));
+    return hours == '00'
+        ? minutes + ':' + seconds
+        : hours + ':' + minutes + ':' + seconds;
+  }
 
-//   @override
-//   Widget build(BuildContext context) {
-//     return Stack(children: [
-//       AspectRatio(
-//         aspectRatio: _controller.value.aspectRatio,
-//         child: VideoPlayer(_controller),
-//       ),
-//       ClipRRect(
-//         child: BackdropFilter(
-//           filter: ImageFilter.blur(sigmaX: 1, sigmaY: 1),
-//           child: Container(
-//             width: _playerSize.width,
-//             height: _playerSize.height,
-//             color: Colors.white.withOpacity(0.3),
-//             child: Column(
-//               mainAxisAlignment: MainAxisAlignment.center,
-//               children: [
-//                 Row(
-//                   mainAxisAlignment: MainAxisAlignment.spaceAround,
-//                   children: [
-//                     IconButton(
-//                       onPressed: () {},
-//                       icon: Icon(
-//                         Icons.skip_previous_rounded,
-//                         size: _IconSize,
-//                         color: Colors.white,
-//                       ),
-//                     ),
-//                     IconButton(
-//                       onPressed: _playAndPause,
-//                       icon: Icon(
-//                         _isPlaying
-//                             ? Icons.pause_circle_outline_outlined
-//                             : Icons.play_circle_outlined,
-//                         size: _IconSize,
-//                         color: Colors.white,
-//                       ),
-//                     ),
-//                     IconButton(
-//                       onPressed: () {},
-//                       icon: Icon(
-//                         Icons.skip_next_rounded,
-//                         size: _IconSize,
-//                         color: Colors.white,
-//                       ),
-//                     )
-//                   ],
-//                 )
-//               ],
-//             ),
-//           ),
-//         ),
-//       ),
-//     ]);
-//   }
-// }
+  @override
+  void dispose() {
+    // TODO: implement dispose
+    _timelineNotifier?.dispose();
+    _controller.pause();
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return _controller.value.isInitialized
+        ? IntrinsicHeight(
+            child: Stack(
+              children: [
+                AspectRatio(
+                  aspectRatio: _controller.value.aspectRatio,
+                  child: VideoPlayer(_controller),
+                ),
+                Visibility(
+                  replacement: SizedBox.expand(
+                    child: GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          _onTouch = true;
+                        });
+                        // Auto dismiss overlay after 1 second
+                        _timer =
+                            Timer.periodic(Duration(milliseconds: 3000), (_) {
+                          setState(() {
+                            logger.d('Test');
+                            _onTouch = false;
+                            _timer.cancel();
+                          });
+                        });
+                      },
+                    ),
+                  ),
+                  visible: _onTouch,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Row(
+                        children: [
+                          IconButton(
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                            },
+                            icon: Icon(
+                              Icons.arrow_back_ios_new_rounded,
+                              color: Colors.white,
+                            ),
+                          ),
+                          Text(
+                            '거실',
+                            style: TextStyle(color: Colors.white),
+                          )
+                        ],
+                      ),
+                      TextButton(
+                        style: ButtonStyle(
+                            shape: MaterialStatePropertyAll(CircleBorder(
+                                side: BorderSide(color: Colors.white)))),
+                        child: Icon(
+                          _controller.value.isPlaying
+                              ? Icons.pause
+                              : Icons.play_arrow,
+                          color: Colors.white,
+                        ),
+                        onPressed: () {
+                          _onTouch = !_onTouch;
+
+                          // pause while video is playing, play while video is pausing
+                          setState(() {
+                            _controller.value.isPlaying
+                                ? _controller.pause()
+                                : _controller.play();
+                          });
+
+                          // Auto dismiss overlay after 1 second
+                          _timer =
+                              Timer.periodic(Duration(milliseconds: 3000), (_) {
+                            setState(() {
+                              _onTouch = false;
+                              _timer.cancel();
+                            });
+                          });
+                        },
+                      ),
+                      Column(
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Row(
+                                children: [
+                                  ValueListenableBuilder(
+                                    valueListenable: _timelineNotifier!,
+                                    builder: (_, value, __) {
+                                      String _timeLine = _changeTimeLine(value);
+                                      return Text(
+                                        '${_timeLine}',
+                                        style: TextStyle(color: Colors.white),
+                                      );
+                                    },
+                                  ),
+                                  Text(
+                                    '/' +
+                                        _changeTimeLine(
+                                            _controller.value.duration),
+                                    style: TextStyle(color: Colors.white),
+                                  )
+                                ],
+                              ),
+                              IconButton(
+                                onPressed: () {},
+                                icon: Icon(Icons.fullscreen_rounded),
+                                color: Colors.white,
+                              )
+                            ],
+                          ),
+                          VideoProgressIndicator(_controller,
+                              allowScrubbing: true),
+                        ],
+                      )
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          )
+        : Container();
+  }
+}

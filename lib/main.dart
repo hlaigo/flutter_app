@@ -1,11 +1,12 @@
 import 'package:aigo/api/restful.dart';
 import 'package:aigo/firebase_options.dart';
-import 'package:aigo/screens/frames/main_frame.dart';
+import 'package:aigo/frames/main_frame.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:kakao_flutter_sdk/kakao_flutter_sdk.dart';
 import 'package:logger/logger.dart';
 
@@ -55,7 +56,7 @@ Future<void> main() async {
     nativeAppKey: 'a2f0af05c136aff5517f6245755d787d',
     javaScriptAppKey: '3b750bac44af65011c7bb5f31612eda6',
   );
-
+  await initializeDateFormatting();
   auth = FirebaseAuth.instanceFor(app: app);
   runApp(const MainApp());
 }
