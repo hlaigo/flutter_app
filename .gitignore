@@ -41,3 +41,8 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+
+
+/assets/videos/tested_video.mp4
+/assets/videos/videoplayback.mp4

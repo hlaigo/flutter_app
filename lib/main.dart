@@ -1,11 +1,16 @@
+import 'dart:async';
+import 'dart:convert';
+
 import 'package:aigo/api/restful.dart';
 import 'package:aigo/firebase_options.dart';
 import 'package:aigo/frames/main_frame.dart';
+import 'package:aigo/screens/competition_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:kakao_flutter_sdk/kakao_flutter_sdk.dart';
 import 'package:logger/logger.dart';
@@ -14,19 +19,46 @@ late final FirebaseApp app;
 late final FirebaseAuth auth;
 late AndroidNotificationChannel channel;
 late FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin;
+StreamController<String> streamController = StreamController.broadcast();
 
 var logger = Logger();
 
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   print('Notification Received!');
+  streamController.add('home');
   if (message.notification != null) {
-    logger.d(message.data);
+    logger.d(message.notification);
   }
+}
+
+void onDidReceiveNotificationResponse(NotificationResponse details) async {
+  // 여기서 핸들링!
+  print('onDidReceiveNotificationResponse - payload: ${details.payload}');
+  final payload = details.payload ?? '';
+  streamController.add('home');
+  Fluttertoast.showToast(msg: "test");
+  final parsedJson = jsonDecode(payload);
+  if (!parsedJson.containsKey('d')) {
+    return;
+  }
+}
+
+Future<void> setupInteractedMessage() async {
+  RemoteMessage? initialMessage =
+      await FirebaseMessaging.instance.getInitialMessage();
+  if (initialMessage != null) {
+    _handleMessage(initialMessage);
+  }
+}
+
+void _handleMessage(RemoteMessage message) {
+  Future.delayed(Duration(seconds: 1), () {
+    streamController.add('home');
+  });
 }
 
 void initializeNotification() async {
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
-
   final flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
   await flutterLocalNotificationsPlugin
       .resolvePlatformSpecificImplementation<
@@ -34,11 +66,14 @@ void initializeNotification() async {
       ?.createNotificationChannel(AndroidNotificationChannel(
           'high_importance_channel', 'high_importance_notification',
           importance: Importance.max));
-  await flutterLocalNotificationsPlugin.initialize(InitializationSettings(
-    android: AndroidInitializationSettings("@mipmap/ic_launcher"),
-    iOS: DarwinInitializationSettings(),
-    macOS: DarwinInitializationSettings(),
-  ));
+  await flutterLocalNotificationsPlugin.initialize(
+    InitializationSettings(
+      android: AndroidInitializationSettings("@mipmap/ic_launcher"),
+      iOS: DarwinInitializationSettings(),
+      macOS: DarwinInitializationSettings(),
+    ),
+    onDidReceiveNotificationResponse: onDidReceiveNotificationResponse,
+  );
 
   await FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(
       alert: true, badge: true, sound: true);
@@ -58,6 +93,7 @@ Future<void> main() async {
   );
   await initializeDateFormatting();
   auth = FirebaseAuth.instanceFor(app: app);
+  setupInteractedMessage();
   runApp(const MainApp());
 }
 
@@ -83,23 +119,13 @@ class _MainAppState extends State<MainApp> {
 
   @override
   void initState() {
-    FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
-      RemoteNotification? notification = message.notification;
-      if (notification != null) {
-        FlutterLocalNotificationsPlugin().show(
-          notification.hashCode,
-          notification.title,
-          notification.body,
-          const NotificationDetails(
-            android: AndroidNotificationDetails(
-                'high_importance_chanel', 'high_importance_notification',
-                importance: Importance.max),
-          ),
-        );
-        setState(() {
-          messageString = message.notification!.body!;
-          logger.d("Foreground 메세지 수신: $messageString \n ${DateTime.now()}");
-        });
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      logger.d('Got a message whilst in the foreground!');
+      logger.d('Message data: ${message.data}');
+
+      if (message.notification != null) {
+        logger.d(
+            'Message also contained a notification: ${message.notification}');
       }
     });
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {

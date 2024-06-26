@@ -1,4 +1,8 @@
+import 'package:aigo/api/restful.dart';
 import 'package:aigo/main.dart';
+import 'package:aigo/models/event_log.dart';
+import 'package:aigo/screens/stream_screen.dart';
+import 'package:aigo/widgets/situation_icon.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -14,10 +18,8 @@ class HistoryScreen extends StatefulWidget {
 }
 
 class _HistoryScreenState extends State<HistoryScreen> {
-  List<Map<String, String>> eventLog = [
-    {'dateTime': '2024.06.20 16:43:21', 'situation': '실족'},
-    {'dateTime': '2024.06.19 20:21:30', 'situation': '낙상'},
-  ];
+  Map<DateTime, List<dynamic>> eventDateList = {};
+  List<EventLog> eventLogs = [];
 
   DateTime _selectedDate = DateTime.now();
 
@@ -97,6 +99,20 @@ class _HistoryScreenState extends State<HistoryScreen> {
   void initState() {
     // TODO: implement initState
     super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
+      List<dynamic> tmpLogs = await Restful.getEventLog("test1234");
+      for (int i = 0; i < tmpLogs.length; i++) {
+        EventLog _eventlog = EventLog.fromJson(tmpLogs[i]);
+        eventLogs.add(_eventlog);
+        DateTime _tmpDate = _eventlog.eventDateTime;
+        DateTime _eventDate =
+            DateTime(_tmpDate.year, _tmpDate.month, _tmpDate.day);
+        eventDateList.addAll({
+          _eventDate: [1]
+        });
+      }
+      setState(() {});
+    });
   }
 
   @override
@@ -113,6 +129,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 shouldFillViewport: true,
                 locale: 'ko_kr',
                 daysOfWeekHeight: MediaQuery.of(context).size.height * 0.08,
+                eventLoader: (DateTime day) {
+                  return eventDateList.containsKey(day) ? [1] : [];
+                },
                 calendarBuilders: CalendarBuilders(
                   dowBuilder: (context, day) {
                     late String dayStr;
@@ -200,7 +219,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   },
                   selectedBuilder: (context, day, focusedDay) {
                     String stringDay = DateFormat('dd').format(day);
-                    logger.d(stringDay);
                     bool isLastSunday = false;
                     bool isLastSaturday = false;
                     if (focusedDay.month == day.month) {
@@ -323,7 +341,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     Flexible(
                       child: ListView.builder(
                         physics: NeverScrollableScrollPhysics(),
-                        itemCount: eventLog.length,
+                        itemCount: eventLogs.length,
                         itemBuilder: (context, index) {
                           return SizedBox(
                             height: MediaQuery.of(context).size.height * 0.04,
@@ -335,7 +353,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                   child: Padding(
                                     padding: EdgeInsets.only(right: 10),
                                     child: Text(
-                                      eventLog[index]['dateTime']!,
+                                      DateFormat("yy.MM.dd HH:mm:ss").format(
+                                          eventLogs[index].eventDateTime),
                                       style: TextStyle(
                                         fontSize: 16,
                                         fontFamily: "NanumGothic",
@@ -346,8 +365,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                 ),
                                 Flexible(
                                   flex: 4,
-                                  child: situationIcon(
-                                      situation: eventLog[index]['situation']!),
+                                  child: SituationIcon(
+                                      situation: eventLogs[index].situation),
                                 ),
                               ],
                             ),
@@ -360,52 +379,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
               ),
             )
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class situationIcon extends StatelessWidget {
-  situationIcon({
-    super.key,
-    required this.situation,
-  });
-
-  final String situation;
-  late Color backgroundColor;
-
-  @override
-  Widget build(BuildContext context) {
-    switch (situation) {
-      case "낙상":
-        backgroundColor = Color(0xFFFF3737);
-        break;
-      case "실족":
-        backgroundColor = Color(0xFFFF823C);
-        break;
-      case "배회":
-        backgroundColor = Color(0xFFFFBB37);
-        break;
-      case "침입":
-        backgroundColor = Color(0xFFE30A0A);
-        break;
-      default:
-        backgroundColor = Color(0xFFFF3737);
-        break;
-    }
-
-    return Container(
-      decoration: BoxDecoration(
-          color: backgroundColor, borderRadius: BorderRadius.circular(5)),
-      padding: EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-      child: Text(
-        situation,
-        style: TextStyle(
-          color: Colors.white,
-          fontSize: 16,
-          fontFamily: "NanumGothic",
-          fontWeight: FontWeight.bold,
         ),
       ),
     );

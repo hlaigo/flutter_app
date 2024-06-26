@@ -81,12 +81,12 @@ class _StreamScreenState extends State<StreamScreen> {
                                 fontSize: 20, fontWeight: FontWeight.bold),
                           ),
                           // 추후 리스트 빌더로 변경
-                          EventLog(
+                          ListEventLog(
                             eventDateTime: DateFormat('yyyy-MM-dd HH:MM:ss')
                                 .format(DateTime.now()),
                             eventType: '실족',
                           ),
-                          EventLog(
+                          ListEventLog(
                             eventDateTime: DateFormat('yyyy-MM-dd HH:MM:ss')
                                 .format(DateTime.now().add(Duration(days: -1))),
                             eventType: '낙상',
@@ -106,10 +106,11 @@ class _StreamScreenState extends State<StreamScreen> {
   }
 }
 
-class EventLog extends StatelessWidget {
+class ListEventLog extends StatelessWidget {
   String eventDateTime;
   String eventType;
-  EventLog({super.key, required this.eventDateTime, required this.eventType});
+  ListEventLog(
+      {super.key, required this.eventDateTime, required this.eventType});
 
   @override
   Widget build(BuildContext context) {

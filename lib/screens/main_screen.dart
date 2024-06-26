@@ -1,4 +1,5 @@
 import 'package:aigo/main.dart';
+import 'package:aigo/screens/competition_screen.dart';
 import 'package:aigo/screens/stream_screen.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -51,7 +52,11 @@ class _MainScreenState extends State<MainScreen> {
                     border: Border.all(color: Colors.grey),
                     borderRadius: BorderRadius.circular(5)),
                 child: IconButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      Navigator.of(context).push(MaterialPageRoute(
+                        builder: (context) => CompetitionStreamScreen(),
+                      ));
+                    },
                     icon: Transform(
                       alignment: Alignment.center,
                       transform: Matrix4.rotationY(math.pi),
@@ -149,11 +154,15 @@ class GridButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return ElevatedButton(
       onPressed: () {
-        Navigator.of(context).push(MaterialPageRoute(
-          builder: (context) => StreamScreen(
-            videoResource: videoResource,
-          ),
-        ));
+        Navigator.of(context).push(MaterialPageRoute(builder: (context) {
+          if (videoResource == "") {
+            return CompetitionStreamScreen();
+          } else {
+            return StreamScreen(
+              videoResource: videoResource,
+            );
+          }
+        }));
       },
       style: ElevatedButton.styleFrom(
           shape:
