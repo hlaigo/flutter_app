@@ -15,20 +15,13 @@ class HistoryScreen extends StatefulWidget {
 
 class _HistoryScreenState extends State<HistoryScreen> {
   List<Map<String, String>> eventLog = [
-    {
-      'dateTime': DateFormat('yyyy.MM.dd hh:mm:ss').format(DateTime.now()),
-      'situation': '골절'
-    },
-    {
-      'dateTime': DateFormat('yyyy.MM.dd hh:mm:ss')
-          .format(DateTime.now().add(Duration(hours: -5))),
-      'situation': '골절'
-    },
+    {'dateTime': '2024.06.20 16:43:21', 'situation': '실족'},
+    {'dateTime': '2024.06.19 20:21:30', 'situation': '낙상'},
   ];
 
   DateTime _selectedDate = DateTime.now();
 
-  static const double calendarFontSize = 30.0;
+  static const double calendarFontSize = 24.0;
   static String calendarFontFamily = "Pacifico";
 
   void onDaySelected(DateTime selectedDate, DateTime focusedDate) {
