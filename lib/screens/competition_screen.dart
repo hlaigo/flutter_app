@@ -23,7 +23,7 @@ class CompetitionStreamScreen extends StatefulWidget {
 
 class _CompetitionStreamScreenState extends State<CompetitionStreamScreen> {
   late VideoPlayerController _controller;
-
+  // 넘어진 시간 1분 19초
   Future<void> initializePlayer() async {}
   bool _onTouch = false;
   late Timer _timer;
@@ -31,6 +31,42 @@ class _CompetitionStreamScreenState extends State<CompetitionStreamScreen> {
 
   void _listener() {
     _timelineNotifier!.value = _controller.value.position;
+  }
+
+  void _showDiaglog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                "🚨 위험 상황이 감지되었습니다.",
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+              SizedBox(
+                height: 5,
+              ),
+              Text("119에 신고하시겠습니까??")
+            ],
+          ),
+          actionsAlignment: MainAxisAlignment.spaceAround,
+          actions: [
+            TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: Text("예")),
+            TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: Text("아니요"))
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -41,10 +77,14 @@ class _CompetitionStreamScreenState extends State<CompetitionStreamScreen> {
       ..initialize().then((_) {
         // Ensure the first frame is shown after the video is initialized, even before the play button has been pressed.
         setState(() {
+          _controller.seekTo(Duration(minutes: 1, seconds: 22));
           _controller.play();
           _controller.addListener(_listener);
         });
       });
+    Future.delayed(Duration(seconds: 10), () {
+      _showDiaglog(context);
+    });
     super.initState();
   }
 
@@ -228,7 +268,7 @@ class _CompetitionStreamScreenState extends State<CompetitionStreamScreen> {
             ),
             Flexible(
                 child: Container(
-              color: Colors.amber,
+              color: Colors.white,
               child: Center(
                 child: Padding(
                   padding: EdgeInsets.all(
@@ -236,6 +276,10 @@ class _CompetitionStreamScreenState extends State<CompetitionStreamScreen> {
                   ),
                   child: SizedBox.expand(
                     child: Container(
+                      decoration: BoxDecoration(
+                          shape: BoxShape.rectangle,
+                          color: Colors.grey.shade300,
+                          borderRadius: BorderRadius.circular(7.0)),
                       padding: EdgeInsets.all(
                           MediaQuery.of(context).size.width * 0.03),
                       child: Column(
@@ -252,12 +296,12 @@ class _CompetitionStreamScreenState extends State<CompetitionStreamScreen> {
                           // 추후 리스트 빌더로 변경
                           ListEventLog(
                             eventDateTime: DateFormat('yyyy-MM-dd HH:MM:ss')
-                                .format(DateTime.now()),
+                                .format(
+                                    DateTime.now().add(Duration(minutes: -1))),
                             eventType: '낙상',
                           ),
                         ],
                       ),
-                      color: Colors.grey.shade300,
                     ),
                   ),
                 ),
@@ -265,6 +309,17 @@ class _CompetitionStreamScreenState extends State<CompetitionStreamScreen> {
             ))
           ],
         ),
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        onTap: (value) {},
+        currentIndex: 0,
+        items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.calendar_month), label: 'History'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.account_circle), label: 'Mypage'),
+        ],
       ),
     );
   }

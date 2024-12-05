@@ -8,6 +8,7 @@ import 'package:aigo/screens/competition_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -20,16 +21,8 @@ late final FirebaseAuth auth;
 late AndroidNotificationChannel channel;
 late FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin;
 StreamController<String> streamController = StreamController.broadcast();
-
+GlobalKey<NavigatorState> navigatorKey = GlobalKey();
 var logger = Logger();
-
-Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  print('Notification Received!');
-  streamController.add('home');
-  if (message.notification != null) {
-    logger.d(message.notification);
-  }
-}
 
 void onDidReceiveNotificationResponse(NotificationResponse details) async {
   // 여기서 핸들링!
@@ -52,9 +45,35 @@ Future<void> setupInteractedMessage() async {
 }
 
 void _handleMessage(RemoteMessage message) {
+  // Fluttertoast.showToast(msg: 'Notification Start');
   Future.delayed(Duration(seconds: 1), () {
     streamController.add('home');
   });
+}
+
+// 포그라운드 알림 처리
+void showFlutterNotification(RemoteMessage message) {
+  logger.d("포그라운드 감지");
+  RemoteNotification? notification = message.notification;
+  AndroidNotification? android = message.notification?.android;
+  if (notification != null && android != null && !kIsWeb) {
+    flutterLocalNotificationsPlugin.show(
+      notification.hashCode,
+      notification.title,
+      notification.body,
+      payload: jsonEncode(message.data), //필수
+      NotificationDetails(
+        android: AndroidNotificationDetails(
+          channel.id,
+          channel.name,
+          channelDescription: channel.description,
+          // TODO add a proper drawable resource to android, for now using
+          //      one that already exists in example app.
+          icon: '@mipmap/launcher_icon',
+        ),
+      ),
+    );
+  }
 }
 
 void initializeNotification() async {
@@ -64,8 +83,10 @@ void initializeNotification() async {
       .resolvePlatformSpecificImplementation<
           AndroidFlutterLocalNotificationsPlugin>()
       ?.createNotificationChannel(AndroidNotificationChannel(
-          'high_importance_channel', 'high_importance_notification',
-          importance: Importance.max));
+        'high_importance_channel',
+        'high_importance_notification',
+        importance: Importance.max,
+      ));
   await flutterLocalNotificationsPlugin.initialize(
     InitializationSettings(
       android: AndroidInitializationSettings("@mipmap/ic_launcher"),
@@ -74,9 +95,26 @@ void initializeNotification() async {
     ),
     onDidReceiveNotificationResponse: onDidReceiveNotificationResponse,
   );
-
+  await FirebaseMessaging.instance.requestPermission(
+    alert: true,
+    announcement: false,
+    badge: true,
+    carPlay: false,
+    criticalAlert: false,
+    provisional: false,
+    sound: true,
+  );
   await FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(
       alert: true, badge: true, sound: true);
+  logger.d("메시징 시작");
+  FirebaseMessaging.onMessage.listen(showFlutterNotification);
+}
+
+@pragma('vm:entry-point')
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  initializeNotification();
+  // showFlutterNotification(message);firebase에서 자동으띄워줌(주석지우면 2번뜸)
 }
 
 Future<void> main() async {
@@ -119,15 +157,6 @@ class _MainAppState extends State<MainApp> {
 
   @override
   void initState() {
-    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      logger.d('Got a message whilst in the foreground!');
-      logger.d('Message data: ${message.data}');
-
-      if (message.notification != null) {
-        logger.d(
-            'Message also contained a notification: ${message.notification}');
-      }
-    });
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
       var deviceToken = await getMyDeviceToken();
       Restful.deviceTokenReporting('YEOPJONG', deviceToken);
@@ -138,6 +167,7 @@ class _MainAppState extends State<MainApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorKey: navigatorKey,
       home: MainFrame(),
     );
   }

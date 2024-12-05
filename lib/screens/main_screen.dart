@@ -28,7 +28,7 @@ class _MainScreenState extends State<MainScreen> {
       "videoResource":
           "http://210.99.70.120:1935/live/cctv003.stream/playlist.m3u8"
     },
-    {"camName": "Test", "isOn": "true", "videoResource": ""},
+    {"camName": "거실", "isOn": "true", "videoResource": ""},
   ];
 
   void _changeView(bool isGrid) {
